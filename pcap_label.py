@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import time
 from scapy.all import *
 
 def ZeekLogs_to_csv(file_path):
@@ -61,6 +62,7 @@ def pcap_to_df(pcap_file, byline = True):
         df.loc[i] = data.time
         i += 1
 
+    print("[+] Prased Items:{0}              ".format(i))
     print("[+] Prase Completed:{0}".format(pcap_file))
     return df.astype(np.float64)
 
@@ -78,11 +80,13 @@ def generate_csv(folder):
     result = result[['detailed-label']]
     print(result)
     result.to_csv(folder + 'pcap_label.csv')
-    print('[+] File Saved:'+ folder + 'pcap_label.csv\n\n')
+    print('[+] File Saved:'+ folder + 'pcap_label.csv')
 
 location = '/Volumes/Unicorn/IoTScenarios/'
 
 folder_list = ['CTU-IoT-Malware-Capture-8-1/']
 
 for folder in folder_list:
+    start_time = time.time()
     generate_csv(location + folder)
+    print("[+] Time Cost {0} Seconds".format(time.time()-start_time))
