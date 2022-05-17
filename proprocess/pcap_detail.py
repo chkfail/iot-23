@@ -2,49 +2,6 @@ import pandas as pd
 import numpy as np
 from scapy.all import *
 
-def ZeekLogs_to_csv(file_path):
-    try:
-        out_data = pd.read_csv(file_path + '.csv')
-        return out_data
-    except:
-        data_file = open(file_path)
-        line = data_file.readline()
-        attribs = {}
-        while line.strip().startswith('#'):
-            # print(line)
-            key, *val = line.split()
-            attribs[key[1:]] = val
-            line = data_file.readline()
-        # print(attribs)
-        df = {}
-        while line.strip().startswith('#close') is False:
-            for k, v in zip(attribs['fields'], line.split()):
-                # print(k, v)
-                if k not in df.keys():
-                    df[k] = []
-                df[k].append(v)
-            line = data_file.readline()
-
-        data_file.close()
-        out_data = pd.DataFrame(df)
-        out_data.to_csv(file_path + '.csv', index=False)
-        return out_data
-    
-def preprocess_data(file):
-    data = ZeekLogs_to_csv(file)
-    data['detailed-label'] = data['detailed-label'].replace(to_replace= '-',value= 'Benign')
-    data = data.replace(to_replace='-', value=pd.NA)
-    data = data.fillna(value=0)
-    data['ts'] = data['ts'].astype(np.float64)
-    return data
-
-def csv_to_df(csv_file):
-    print("[*] Loading:{0}".format(csv_file), end = "\r")
-    data = preprocess_data(csv_file)
-    df = data[['ts','detailed-label']]
-    print("[+] Load Completed:{0}".format(csv_file))
-    return df
-
 def pcap_label_to_df(csv_file):
     df = pd.read_csv(csv_file)
     return df
@@ -52,7 +9,7 @@ def pcap_label_to_df(csv_file):
 def find_pcap(folder):
     for file in os.listdir(folder):
         if os.path.splitext(file)[1] == '.pcap':
-            if str.find(file, '2018') != -1:
+            if str.find(file, '2018') != -1 or str.find(file, '2019') != -1:
                 return os.path.join(folder, file)
             
 def pcap_to_df(pcap_file, df, byline = True):
@@ -75,8 +32,7 @@ def pcap_to_df(pcap_file, df, byline = True):
     df['ip_tos'] = np.nan
     df['ip_len'] = np.nan
     df['ip_id'] = np.nan
-    df['ip_flags_names'] = np.nan
-    df['ip_flags_value'] = np.nan
+    df['ip_flags'] = np.nan
     df['ip_frag'] = np.nan
     df['ip_ttl'] = np.nan
     df['ip_proto'] = np.nan
@@ -90,8 +46,7 @@ def pcap_to_df(pcap_file, df, byline = True):
     df['tcp_ack']  = np.nan
     df['tcp_dataofs']  = np.nan
     df['tcp_reserved']  = np.nan
-    df['tcp_flags_names']  = np.nan
-    df['tcp_flags_value']  = np.nan
+    df['tcp_flags']  = np.nan
     df['tcp_window']  = np.nan
     df['tcp_chksum']  = np.nan
     df['tcp_urgptr']  = np.nan
@@ -107,10 +62,12 @@ def pcap_to_df(pcap_file, df, byline = True):
     df['icmp_length'] = np.nan
     df['icmp_nexthopmtu'] = np.nan
     df['icmp_unused'] = np.nan
-    
     for p in packets:
+        if i == df.shape[0]:
+            break
         if pcap_row_id == df['pcap_row_id'][i]:
             df['ts'][i] = p.time
+            # p.show()
             if p.haslayer("IP"):
                 # a = p['IP'].fields
                 df['ip_version'][i] = p['IP'].version
@@ -118,8 +75,7 @@ def pcap_to_df(pcap_file, df, byline = True):
                 df['ip_tos'][i] = p['IP'].tos
                 df['ip_len'][i] = p['IP'].len
                 df['ip_id'][i] = p['IP'].id            
-                df['ip_flags_names'][i] = p['IP'].flags.names
-                df['ip_flags_value'][i] = p['IP'].flags.value
+                df['ip_flags'][i] = p['IP'].flags
                 df['ip_frag'][i] = p['IP'].frag
                 df['ip_ttl'][i] = p['IP'].ttl
                 df['ip_proto'][i] = p['IP'].proto
@@ -135,8 +91,7 @@ def pcap_to_df(pcap_file, df, byline = True):
                 df['tcp_ack'][i]  = p['TCP'].ack
                 df['tcp_dataofs'][i]  = p['TCP'].dataofs
                 df['tcp_reserved'][i]  = p['TCP'].reserved
-                df['tcp_flags_names'][i]  = p['TCP'].flags.names
-                df['tcp_flags_value'][i]  = p['TCP'].flags.value
+                df['tcp_flags'][i]  = p['TCP'].flags
                 df['tcp_window'][i]  = p['TCP'].window
                 df['tcp_chksum'][i]  = p['TCP'].chksum
                 df['tcp_urgptr'][i]  = p['TCP'].urgptr
@@ -165,7 +120,14 @@ def pcap_to_df(pcap_file, df, byline = True):
     return df
 
 location = '/Volumes/Unicorn/IoTScenarios/'
-folder_list = ['CTU-IoT-Malware-Capture-3-1/']
+folder_list = ['CTU-IoT-Malware-Capture-3-1/',
+'CTU-IoT-Malware-Capture-8-1/',
+'CTU-IoT-Malware-Capture-20-1/',
+'CTU-IoT-Malware-Capture-21-1/',
+'CTU-IoT-Malware-Capture-34-1/',
+'CTU-IoT-Malware-Capture-42-1/']
+
+folder_list = ['CTU-IoT-Malware-Capture-8-1/']
 
 for folder in folder_list:
     folder = location + folder

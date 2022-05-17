@@ -69,13 +69,14 @@ def pcap_to_df(pcap_file, byline = True):
 def find_pcap(folder):
     for file in os.listdir(folder):
         if os.path.splitext(file)[1] == '.pcap':
-            if str.find(file, '2018') != -1:
+            if str.find(file, '2018') != -1 or str.find(file, '2019') != -1:
                 return os.path.join(folder, file)
     
 def generate_csv(folder):
     zeek_df = csv_to_df(folder + 'bro/conn.log.labeled')
+    print(zeek_df)
     pcap_df = pcap_to_df(find_pcap(folder), byline=True)
-
+    print(pcap_df)
     result = pd.merge(pcap_df, zeek_df, how='left', left_on=['ts'], right_on='ts')
     result = result[['detailed-label']]
     print(result)
@@ -84,7 +85,7 @@ def generate_csv(folder):
 
 location = '/Volumes/Unicorn/IoTScenarios/'
 
-folder_list = ['CTU-IoT-Malware-Capture-8-1/']
+folder_list = ['CTU-IoT-Malware-Capture-44-1/']
 
 for folder in folder_list:
     start_time = time.time()
