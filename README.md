@@ -6,6 +6,8 @@ To process data in lot-23 dataset
 
 ## Preprocess
 
-## Binary Classification 
+## Binary Classification
 
-## Muti Classification 
+## Muti Classification  
+
+## Plots  
