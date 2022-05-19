@@ -85,7 +85,7 @@ def generate_csv(folder):
 
 location = '/Volumes/Unicorn/IoTScenarios/'
 
-folder_list = ['CTU-IoT-Malware-Capture-44-1/']
+folder_list = ['CTU-IoT-Malware-Capture-8-1/']
 
 for folder in folder_list:
     start_time = time.time()
